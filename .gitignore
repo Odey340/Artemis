@@ -1,0 +1,74 @@
+# Build directories
+build/
+cmake-build-*/
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.suo
+*.user
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.cmake
+!cmake/*.cmake
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+artemis.log
+
+# Results
+results.csv
+results_trades.csv
+optimization_results.csv
+best_parameters.json
+
+# Test files
+test_*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+*.info
+
+# Profiling
+*.prof
+gmon.out
+
+# Temporary files
+*.tmp
+*.temp
+
