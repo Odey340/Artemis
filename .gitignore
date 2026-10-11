@@ -72,3 +72,18 @@ gmon.out
 *.tmp
 *.temp
 
+
+# Artemis runtime output
+output/
+build-*/
+data/*.csv
+data/*.universe.json
+KILL
+
+# Secrets & local config (never commit API keys)
+*.pem
+*.key
+.env
+config/artemis.json
+config/market_map.json
+config/*.local.json

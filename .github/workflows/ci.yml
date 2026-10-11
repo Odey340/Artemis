@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev libcurl4-openssl-dev
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DARTEMIS_NATIVE=OFF
+      - name: Build
+        run: cmake --build build -j
+      - name: Unit tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Sample back-test
+        run: |
+          python3 py/make_sample_data.py --hours 1
+          ./build/artemis backtest data/sample_books.csv -c config/backtest.sample.json
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev libcurl4-openssl-dev
+      - name: Build (ASan + UBSan)
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DARTEMIS_SANITIZE=ON -DARTEMIS_LTO=OFF
+          cmake --build build -j
+      - name: Unit tests
+        run: ctest --test-dir build --output-on-failure

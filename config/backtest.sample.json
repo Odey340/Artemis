@@ -1,0 +1,25 @@
+{
+  // Settings used for the bundled synthetic recording (data/sample_books.csv).
+  "mode": "paper",
+  "universe": { "exhaustive_series": ["KXSAMPLEFED", "KXSAMPLECITY"] },
+  "feed": { "max_book_age_ms": 10000 },
+  "strategy": {
+    "min_profit_usd": 0.25,
+    "min_edge_cents": 0.5,
+    "max_contracts": 200,
+    "confirmations": 1,
+    "safety_margin_cents": 0.0
+  },
+  "risk": {
+    "max_cost_per_trade_usd": 150,
+    "max_total_exposure_usd": 100000,
+    "max_daily_loss_usd": 100,
+    "max_trades_per_hour": 120,
+    "cooldown_ms": 15000,
+    "max_open_baskets_per_event": 1000,
+    "kill_switch_file": ""
+  },
+  "execution": { "leg_mode": "sequential", "max_completion_retries": 1 },
+  "backtest": { "latency_ms": 250, "starting_equity_usd": 10000, "results_prefix": "results" },
+  "output": { "dir": "output", "log_file": "", "log_level": "warn" }
+}

@@ -1,5 +1,0 @@
-[2025-11-11 12:18:56.412] [info] Starting Artemis backtester
-[2025-11-11 12:18:56.413] [info] Data file: data/ES_futures_sample.csv
-[2025-11-11 12:18:56.414] [info] Threshold: 2.5
-[2025-11-11 12:18:56.539] [info] Backtest completed successfully
-[2025-11-11 12:18:56.539] [info] Sharpe: 0.020039004861490056, Max DD: 2.1000000000058207e-05, Throughput: 11967.710184440983 ticks/min
