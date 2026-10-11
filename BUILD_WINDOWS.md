@@ -1,108 +1,73 @@
 # Building Artemis on Windows
 
+Artemis needs two system libraries, **libcurl** and **OpenSSL**, on top of the dependencies CMake downloads for you (spdlog, nlohmann/json, GoogleTest). On Windows the easiest way to get them is [vcpkg](https://github.com/microsoft/vcpkg).
+
+> The Windows build has not been run in CI yet; the Linux build is the reference. If something fails, the MSYS2 route at the bottom is the most Linux-like fallback.
+
 ## Prerequisites
 
-1. **CMake** (≥3.20)
-   - Download from: https://cmake.org/download/
-   - Or use: `winget install Kitware.CMake`
+1. **Visual Studio 2022** (Community is fine) with the **Desktop development with C++** workload.
+2. **CMake ≥ 3.20**: `winget install Kitware.CMake`
+3. **Git**: `winget install Git.Git`
+4. **vcpkg** + the two libraries:
 
-2. **Visual Studio 2022** (Community edition is fine)
-   - Download from: https://visualstudio.microsoft.com/
-   - Install the **"Desktop development with C++"** workload
-   - This includes the MSVC compiler and build tools
+   ```powershell
+   git clone https://github.com/microsoft/vcpkg C:\vcpkg
+   C:\vcpkg\bootstrap-vcpkg.bat
+   C:\vcpkg\vcpkg install curl:x64-windows openssl:x64-windows
+   setx VCPKG_ROOT C:\vcpkg        # then open a new PowerShell
+   ```
 
-3. **Git** (for fetching dependencies)
-   - Download from: https://git-scm.com/download/win
-   - Or use: `winget install Git.Git`
-
-## Quick Setup
-
-Run the setup script to check prerequisites:
-
-```powershell
-.\setup_windows.ps1
-```
+`.\setup_windows.ps1` checks all of the above.
 
 ## Building
 
-### Option 1: Using the build script (Recommended)
+### Option 1: build script (recommended)
 
 ```powershell
 .\build_windows.ps1
 ```
 
-### Option 2: Manual build
+The script uses `%VCPKG_ROOT%` to find vcpkg's CMake toolchain automatically.
+
+### Option 2: by hand
 
 ```powershell
-# Create build directory
-mkdir build
-cd build
-
-# Configure with CMake
-cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release
-
-# Build
-cmake --build . --config Release
+cmake -B build -G "Visual Studio 17 2022" -A x64 `
+      -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+cmake --build build --config Release
+ctest --test-dir build -C Release
 ```
 
-### Option 3: Using Visual Studio
+### Option 3: Visual Studio
 
-1. Open Visual Studio
-2. File → Open → CMake → Select `CMakeLists.txt`
-3. Build → Build All
+Open the folder (File → Open → Folder). Visual Studio picks up `CMakeLists.txt`; set `CMAKE_TOOLCHAIN_FILE` to vcpkg's toolchain in *CMake Settings*, then Build → Build All.
 
 ## Running
 
-After building, the executable will be in `build\Release\artemis.exe`:
-
 ```powershell
-.\build\Release\artemis.exe data\ES_futures_sample.csv 2.5
+python py\make_sample_data.py
+.\build\Release\artemis.exe backtest data\sample_books.csv -c config\backtest.sample.json
+
+$env:KALSHI_API_KEY_ID = "your-key-id"
+$env:KALSHI_PRIVATE_KEY_PATH = "C:\Users\you\.kalshi\key.pem"
+.\build\Release\artemis.exe balance
+.\build\Release\artemis.exe run          # paper trading
 ```
 
-## Running Tests
-
-```powershell
-cd build
-.\Release\artemis_tests.exe
-```
-
-Or using CTest:
-
-```powershell
-cd build
-ctest -C Release
-```
+vcpkg copies `libcurl.dll` and the OpenSSL DLLs next to `artemis.exe` at build time. If you move the executable, take those DLLs with it.
 
 ## Troubleshooting
 
-### CMake not found
-- Make sure CMake is installed and added to PATH
-- Restart PowerShell after installing CMake
-- Verify with: `cmake --version`
+* **`Could NOT find CURL` / `Could NOT find OpenSSL`:** CMake was configured without the vcpkg toolchain. Delete `build\` and configure again with `-DCMAKE_TOOLCHAIN_FILE=...`.
+* **TLS errors at runtime (`SSL certificate problem`):** the vcpkg curl uses the Windows certificate store. Make sure the system clock is correct and no proxy is intercepting TLS.
+* **CMake can't download dependencies:** CMake needs Git and internet access for spdlog / json / GoogleTest the first time.
 
-### Visual Studio not found
-- Install Visual Studio 2022 with C++ workload
-- Or use Visual Studio Build Tools: https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+## Alternative: MSYS2 / MinGW
 
-### Build errors
-- Make sure you're using a Visual Studio Developer Command Prompt
-- Or run: `& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"` before building
-
-### Git not found
-- CMake needs Git to fetch spdlog and GoogleTest
-- Install Git and add to PATH
-- Restart PowerShell after installing
-
-## Alternative: Using MSYS2/MinGW
-
-If you prefer GCC on Windows:
-
-1. Install MSYS2 from https://www.msys2.org/
-2. Install toolchain: `pacman -S mingw-w64-x86_64-gcc cmake make`
-3. Build from MSYS2 terminal:
-   ```bash
-   mkdir build && cd build
-   cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-   cmake --build .
-   ```
-
+```bash
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-curl \
+          mingw-w64-ucrt-x86_64-openssl make
+cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```

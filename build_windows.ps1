@@ -19,6 +19,15 @@ if (-not (Test-Path "build")) {
     Write-Host "Created build directory" -ForegroundColor Green
 }
 
+# vcpkg provides libcurl + OpenSSL (see BUILD_WINDOWS.md)
+$toolchainArgs = @()
+if ($env:VCPKG_ROOT -and (Test-Path "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake")) {
+    $toolchainArgs = @("-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake")
+    Write-Host "Using vcpkg toolchain from $env:VCPKG_ROOT" -ForegroundColor Green
+} else {
+    Write-Host "Warning: VCPKG_ROOT not set - CMake may not find CURL/OpenSSL" -ForegroundColor Yellow
+}
+
 # Change to build directory
 Set-Location build
 
@@ -28,15 +37,13 @@ try {
     # Try to find Visual Studio generator
     $generators = @(
         "Visual Studio 17 2022",
-        "Visual Studio 16 2019",
-        "Visual Studio 15 2017",
-        "Visual Studio 14 2015"
+        "Visual Studio 16 2019"
     )
     
     $generatorFound = $false
     foreach ($gen in $generators) {
         try {
-            cmake .. -G $gen -DCMAKE_BUILD_TYPE=Release 2>&1 | Out-Null
+            cmake .. -G $gen -A x64 @toolchainArgs 2>&1 | Out-Null
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "✓ Configured with $gen" -ForegroundColor Green
                 $generatorFound = $true
@@ -49,7 +56,7 @@ try {
     
     if (-not $generatorFound) {
         # Try default generator
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release @toolchainArgs
         if ($LASTEXITCODE -ne 0) {
             throw "CMake configuration failed"
         }
@@ -101,8 +108,9 @@ if ($exePath) {
     Write-Host "=== Build Complete ===" -ForegroundColor Green
     Write-Host "Executable: $exePath" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "To run the backtest:" -ForegroundColor Yellow
-    Write-Host "  .\$exePath data\ES_futures_sample.csv 2.5" -ForegroundColor White
+    Write-Host "To run the sample backtest:" -ForegroundColor Yellow
+    Write-Host "  python py\make_sample_data.py" -ForegroundColor White
+    Write-Host "  .\$exePath backtest data\sample_books.csv -c config\backtest.sample.json" -ForegroundColor White
 } else {
     Write-Host ""
     Write-Host "Build completed, but executable not found in expected locations." -ForegroundColor Yellow

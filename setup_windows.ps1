@@ -35,6 +35,15 @@ if ($gitCheck) {
     Write-Host "Git not found" -ForegroundColor Red
 }
 
+# Check for vcpkg (provides libcurl + OpenSSL)
+$vcpkgFound = $false
+if ($env:VCPKG_ROOT -and (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
+    Write-Host "vcpkg found at $env:VCPKG_ROOT" -ForegroundColor Green
+    $vcpkgFound = $true
+} else {
+    Write-Host "vcpkg not found (VCPKG_ROOT not set)" -ForegroundColor Red
+}
+
 Write-Host ""
 Write-Host "=== Installation Instructions ===" -ForegroundColor Yellow
 Write-Host ""
@@ -60,7 +69,16 @@ if (-not $gitFound) {
     Write-Host ""
 }
 
-if ($cmakeFound -and $vsFound -and $gitFound) {
+if (-not $vcpkgFound) {
+    Write-Host "4. Install vcpkg + libraries:" -ForegroundColor Cyan
+    Write-Host "   git clone https://github.com/microsoft/vcpkg C:\vcpkg" -ForegroundColor White
+    Write-Host "   C:\vcpkg\bootstrap-vcpkg.bat" -ForegroundColor White
+    Write-Host "   C:\vcpkg\vcpkg install curl:x64-windows openssl:x64-windows" -ForegroundColor White
+    Write-Host "   setx VCPKG_ROOT C:\vcpkg   (then reopen PowerShell)" -ForegroundColor White
+    Write-Host ""
+}
+
+if ($cmakeFound -and $vsFound -and $gitFound -and $vcpkgFound) {
     Write-Host "=== All prerequisites met! ===" -ForegroundColor Green
     Write-Host ""
     Write-Host "To build, run: .\build_windows.ps1" -ForegroundColor Yellow

@@ -1,0 +1,21 @@
+{
+  // Kalshi <-> Polymarket equivalent propositions. Only map markets whose
+  // resolution rules are genuinely identical (same source, same cut-off time,
+  // same edge cases) - a "same question" with different rules is not an arb.
+  //
+  //   kalshi_ticker   Kalshi market ticker
+  //   poly_yes_token  Polymarket CLOB token id for the YES outcome
+  //   poly_no_token   Polymarket CLOB token id for the NO outcome
+  //   invert          true if Polymarket YES corresponds to Kalshi NO
+  //   fee_bps         optional per-pair Polymarket fee override
+  "pairs": [
+    {
+      "id": "example-pair",
+      "label": "Replace with a real mapping",
+      "kalshi_ticker": "KXEXAMPLE-26DEC31-T100",
+      "poly_yes_token": "0000000000000000000000000000000000000000000000000000000000000001",
+      "poly_no_token": "0000000000000000000000000000000000000000000000000000000000000002",
+      "invert": false
+    }
+  ]
+}
